@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>עלי חמינאי - הסוף!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Heebo', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff, #e0f2fe, #bae6fd);
+            color: #1e293b;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            box-shadow: 0 10px 32px rgba(0, 0, 0, 0.05);
+            border-radius: 24px;
+        }
+
+        .glass-btn {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            color: #0369a1;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 1);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #38bdf8 0%, #0ea5e9 100%);
+            transition: width 0.4s ease;
+        }
+
+        .correct-ans {
+            background: rgba(34, 197, 94, 0.3) !important;
+            border-color: #22c55e !important;
+            color: #14532d !important;
+        }
+
+        .wrong-ans {
+            background: rgba(239, 68, 68, 0.3) !important;
+            border-color: #ef4444 !important;
+            color: #7f1d1d !important;
+        }
+
+        .pale-green {
+            background: rgba(34, 197, 94, 0.1) !important;
+            border-color: rgba(34, 197, 94, 0.4) !important;
+        }
+
+        .traffic-red { color: #dc2626; }
+        .traffic-orange { color: #ea580c; }
+        .traffic-green { color: #16a34a; }
+    </style>
+</head>
+<body>
+
+    <img src="logo.png" alt="logo" class="fixed top-4 right-4 w-16 h-16 object-contain z-50 rounded" onerror="this.style.display='none'">
+
+    <main class="w-full max-w-2xl glass-panel p-8 m-4 relative overflow-hidden">
+        
+        <!-- Screen: Start -->
+        <section id="start-screen" class="text-center fade-in">
+            <div class="mb-6 rounded-2xl overflow-hidden shadow-lg mx-auto w-56 h-56 border-4 border-white">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ae/Ali_Khamenei_Portrait.jpg/640px-Ali_Khamenei_Portrait.jpg" alt="[תמונה של עלי חמינאי]" class="w-full h-full object-cover">
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-extrabold mb-4 text-sky-900">עלי חמינאי - הסוף!<br>ונהפוך הוא!!</h1>
+            <p class="text-lg text-sky-800 mb-8 font-medium">חידון אינטראקטיבי על הביוגרפיה, האידאולוגיה והסוף של עלי חמינאי.</p>
+            <button onclick="startQuiz()" class="glass-btn px-12 py-4 rounded-full text-xl font-bold">התחל <i class="fas fa-play ms-2"></i></button>
+        </section>
+
+        <!-- Screen: Game -->
+        <section id="game-screen" class="hidden">
+            <div class="flex justify-between items-center mb-4 text-sky-900 font-bold">
+                <span id="question-counter"></span>
+                <span>ניקוד: <span id="current-score">0</span></span>
+            </div>
+            <div class="w-full h-3 bg-white/50 rounded-full mb-8 overflow-hidden">
+                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <h2 id="question-text" class="text-2xl font-bold mb-8 text-sky-950"></h2>
+            <div id="answers-grid" class="grid grid-cols-1 gap-4"></div>
+        </section>
+
+        <!-- Screen: Quote (10 Oct 2023) -->
+        <section id="quote-screen" class="hidden text-center fade-in py-6">
+            <i class="fas fa-quote-right text-sky-400 text-5xl mb-6"></i>
+            <h2 class="text-2xl font-bold mb-6 text-sky-900">חמינאי ב-10 באוקטובר 2023:</h2>
+            <div class="p-6 bg-white/50 rounded-xl mb-8 border border-white/60">
+                <p class="text-xl italic font-semibold text-sky-950 leading-relaxed">
+                    "אנו מנשקים את ידיהם של המתכננים והצעירים הפלסטינים האמיצים שביצעו את המתקפה... המשטר הציוני ספג תבוסה צבאית ומודיעינית שאינה ניתנת לתיקון."
+                </p>
+            </div>
+            <button onclick="showFinalResults()" class="glass-btn px-10 py-3 rounded-full font-bold">צפה בתוצאות <i class="fas fa-arrow-left ms-2"></i></button>
+        </section>
+
+        <!-- Screen: Results -->
+        <section id="result-screen" class="hidden text-center fade-in">
+            <div id="capture-area" class="p-4">
+                <h2 class="text-2xl font-extrabold text-sky-900 mb-2">ונהפוכו אשר ישלטו היהודים המה בשונאיהם</h2>
+                <div id="trophy" class="hidden text-5xl text-yellow-500 mb-4"><i class="fas fa-trophy"></i></div>
+                <div class="text-5xl font-black mb-4" id="final-score-display">0</div>
+                <p id="feedback-text" class="text-xl font-bold mb-8"></p>
+            </div>
+            <div class="flex flex-col gap-3">
+                <button onclick="location.reload()" class="glass-btn py-3 rounded-xl font-bold"><i class="fas fa-redo me-2"></i>נסה שוב</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="showReview()" class="glass-btn py-3 rounded-xl font-bold"><i class="fas fa-list-check me-2"></i>תשובות</button>
+                    <button onclick="downloadResults()" class="glass-btn py-3 rounded-xl font-bold bg-sky-100"><i class="fas fa-camera me-2"></i>שמור</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Screen: Review -->
+        <section id="review-screen" class="hidden">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-xl font-bold">חזרה על תשובות</h2>
+                <div id="review-point-badge" class="px-3 py-1 rounded-full text-sm font-bold"></div>
+            </div>
+            <div id="review-content" class="mb-8">
+                <p id="review-q-text" class="text-lg font-bold mb-4"></p>
+                <div id="review-options" class="flex flex-col gap-3"></div>
+            </div>
+            <div class="flex justify-between">
+                <button id="prev-rev" onclick="changeReview(-1)" class="glass-btn px-6 py-2 rounded-lg font-bold">הקודם</button>
+                <button id="next-rev" onclick="changeReview(1)" class="glass-btn px-6 py-2 rounded-lg font-bold">הבא</button>
+            </div>
+            <button onclick="showFinalResults()" class="w-full mt-6 text-sky-700 font-bold underline">חזור לסיכום</button>
+        </section>
+
+        <p class="text-center mt-8 text-sky-700/60 text-xs font-bold">מו"פ אמית</p>
+    </main>
+
+    <script>
+        const rawData = [
+            { q: "באיזו עיר באיראן נולד עלי חמינאי?", a: "משהד", d: ["טהראן", "קום", "איספהאן"] },
+            { q: "איזה תפקיד מילא חמינאי בין השנים 1981 ל-1989?", a: "נשיא איראן", d: ["שר החוץ", "ראש הממשלה", "יו\"ר המג'לס"] },
+            { q: "מהי האידאולוגיה הדתית-פוליטית המרכזית שחמינאי מקדם?", a: "ולאית-י פקיה (שלטון חכם ההלכה)", d: ["סוציאליזם איסלאמי", "דמוקרטיה דתית", "ליברליזם שיעי"] },
+            { q: "כיצד כינה חמינאי את מדינת ישראל בנאומיו הרבים?", a: "גידול סרטני שיש להסירו", d: ["האויב הציוני הזמני", "השותף המערבי", "הישות המדברית"] },
+            { q: "מה הייתה עמדתו המוצהרת של חמינאי כלפי השואה?", a: "הוא הטיל ספק בקיומה ובהיקפה", d: ["הוא הכיר בה כפשע נגד האנושות", "הוא טען שהיא הייתה עונש אלוהי", "הוא מעולם לא התייחס לנושא"] },
+            { q: "במסגרת איזה מבצע חוסל חמינאי?", a: "מבצע שאגת ארי", d: ["מבצע עמוד ענן", "מבצע יד ארוכה", "מבצע מגן צפוני"] },
+            { q: "מהי עמדת חמינאי לגבי הסכם הגרעין (JCPOA)?", a: "הוא הביע חוסר אמון עמוק במערב ואישר את נסיגת איראן מהתחייבויותיה", d: ["הוא תמך בו ללא סייג כהישג היסטורי", "הוא טען שאיראן לא זקוקה לאנרגיה גרעינית", "הוא חתם עליו באופן אישי בלוזאן"] },
+            { q: "איראן גובלת בגוף מים אסטרטגי בדרום, ממנו היא מאיימת לחסום את תנועת הנפט. מהו?", a: "המפרץ הפרסי", d: ["הים הכספי", "מפרץ עומאן", "ים סוף"] },
+            { q: "מי היה המנהיג העליון הראשון של איראן לפני חמינאי?", a: "רוחאללה חומייני", d: ["עלי שריאתי", "מוחמד רזא פהלווי", "אכבר האשמי רפסנג'אני"] },
+            { q: "מה אמר חמינאי על המעורבות האמריקאית במזרח התיכון?", a: "שהיא מקור כל הצרות והטרור באזור", d: ["שהיא הכרחית לשמירה על היציבות", "שהיא מסייעת לפיתוח הכלכלה האיראנית", "שהוא מעוניין בברית צבאית עם ארה\"ב"] }
+        ];
+
+        let questions = [];
+        let currentIdx = 0;
+        let score = 0;
+        let userResponses = [];
+        let reviewIdx = 0;
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startQuiz() {
+            questions = shuffle(rawData.map(item => {
+                const options = shuffle([item.a, ...item.d]);
+                return { q: item.q, correct: item.a, options };
+            }));
+            currentIdx = 0;
+            score = 0;
+            userResponses = [];
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('question-counter').innerText = `שאלה ${currentIdx + 1} מתוך ${questions.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentIdx + 1) / questions.length) * 100}%`;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('current-score').innerText = score;
+
+            const grid = document.getElementById('answers-grid');
+            grid.innerHTML = '';
+            const letters = ['א', 'ב', 'ג', 'ד'];
+
+            q.options.forEach((opt, i) => {
+                const btn = document.createElement('button');
+                btn.className = "glass-btn p-4 rounded-xl text-right font-bold flex items-center gap-3";
+                btn.innerHTML = `<span class="bg-sky-600 text-white w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm">${letters[i]}</span> <span>${opt}</span>`;
+                btn.onclick = () => handleAnswer(opt);
+                grid.appendChild(btn);
+            });
+        }
+
+        function handleAnswer(selected) {
+            const q = questions[currentIdx];
+            const isCorrect = selected === q.correct;
+            if (isCorrect) score += 10;
+            
+            userResponses.push({ selected, isCorrect });
+
+            if (currentIdx < questions.length - 1) {
+                currentIdx++;
+                renderQuestion();
+            } else {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('quote-screen').classList.remove('hidden');
+            }
+        }
+
+        function showFinalResults() {
+            document.getElementById('quote-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            
+            const display = document.getElementById('final-score-display');
+            const feedback = document.getElementById('feedback-text');
+            display.innerText = score;
+
+            if (score >= 80) {
+                display.className = "text-7xl font-black mb-4 traffic-green";
+                feedback.innerText = "ונהפוכו! שליטה מוחלטת בחומר. כל הכבוד!";
+                document.getElementById('trophy').classList.remove('hidden');
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+            } else if (score >= 50) {
+                display.className = "text-7xl font-black mb-4 traffic-orange";
+                feedback.innerText = "עבודה טובה, אך יש עוד מה ללמוד על הנושא.";
+                document.getElementById('trophy').classList.add('hidden');
+            } else {
+                display.className = "text-7xl font-black mb-4 traffic-red";
+                feedback.innerText = "כדאי לחזור על החומר ולנסות שוב.";
+                document.getElementById('trophy').classList.add('hidden');
+            }
+        }
+
+        function showReview() {
+            reviewIdx = 0;
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.remove('hidden');
+            renderReview();
+        }
+
+        function renderReview() {
+            const q = questions[reviewIdx];
+            const resp = userResponses[reviewIdx];
+            const letters = ['א', 'ב', 'ג', 'ד'];
+            
+            const badge = document.getElementById('review-point-badge');
+            badge.innerText = resp.isCorrect ? "10 נק'" : "0 נק'";
+            badge.className = resp.isCorrect ? "px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-700" : "px-3 py-1 rounded-full text-sm font-bold bg-red-100 text-red-700";
+
+            document.getElementById('review-q-text').innerText = q.q;
+            const container = document.getElementById('review-options');
+            container.innerHTML = '';
+
+            q.options.forEach((opt, i) => {
+                const div = document.createElement('div');
+                div.className = "p-3 rounded-lg border border-white/40 flex items-center gap-3 font-medium";
+                div.innerHTML = `<span class="font-bold">${letters[i]}.</span> <span>${opt}</span>`;
+                
+                if (opt === q.correct) {
+                    div.classList.add(resp.isCorrect ? 'correct-ans' : 'pale-green');
+                } else if (opt === resp.selected && !resp.isCorrect) {
+                    div.classList.add('wrong-ans');
+                }
+                container.appendChild(div);
+            });
+
+            document.getElementById('prev-rev').disabled = reviewIdx === 0;
+            document.getElementById('next-rev').disabled = reviewIdx === questions.length - 1;
+        }
+
+        function changeReview(dir) {
+            reviewIdx += dir;
+            renderReview();
+        }
+
+        async function downloadResults() {
+            const area = document.getElementById('capture-area');
+            const canvas = await html2canvas(area, { backgroundColor: '#f0f9ff' });
+            const link = document.createElement('a');
+            link.download = 'khamenei_quiz_result.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
